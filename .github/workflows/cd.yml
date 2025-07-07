@@ -82,7 +82,7 @@ jobs:
     # DigitalOcean App Platform 배포 (선택사항)
     - name: Deploy to DigitalOcean App Platform (Optional)
       if: false # 사용하려면 true로 변경
-      uses: digitalocean/app_action@v1.1.5
+      uses: digitalocean/app_action@v2.0.9
       with:
         app_name: ${{ secrets.DIGITALOCEAN_APP_NAME }}
         token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
