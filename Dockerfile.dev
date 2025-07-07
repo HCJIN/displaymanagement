@@ -1,0 +1,29 @@
+FROM node:18-alpine
+
+# 개발 도구 설치
+RUN apk add --no-cache git
+
+WORKDIR /app
+
+# 루트 패키지 파일 복사
+COPY package*.json ./
+
+# 백엔드 의존성 설치
+COPY backend/package*.json ./backend/
+RUN cd backend && npm install
+
+# 프론트엔드 의존성 설치
+COPY frontend/package*.json ./frontend/
+RUN cd frontend && npm install
+
+# 루트 의존성 설치
+RUN npm install
+
+# 소스 코드 복사
+COPY . .
+
+# 포트 노출
+EXPOSE 3000 3001
+
+# 개발 서버 시작
+CMD ["npm", "run", "dev"] 

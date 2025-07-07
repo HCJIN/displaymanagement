@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key}
+      - MQTT_BROKER_URL=${MQTT_BROKER_URL:-mqtt://localhost:1883}
+    volumes:
+      - ./logs:/app/logs
+      - ./images:/app/images
+    healthcheck:
+      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # 개발 환경용 서비스
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3001"
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-key}
+      - MQTT_BROKER_URL=${MQTT_BROKER_URL:-mqtt://localhost:1883}
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+      - ./logs:/app/logs
+      - ./images:/app/images
+      - /app/backend/node_modules
+      - /app/frontend/node_modules
+    profiles:
+      - dev
+
+  # MQTT 브로커 (선택사항)
+  mqtt:
+    image: eclipse-mosquitto:latest
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    profiles:
+      - mqtt
+
+networks:
+  default:
+    driver: bridge

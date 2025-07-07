@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm run install:all
+
+    - name: Run tests
+      run: npm run test
+
+    - name: Build application
+      run: npm run build
+
+    - name: Create release archive
+      run: |
+        mkdir -p release
+        cp -r frontend/build release/
+        cp -r backend release/
+        cp package.json release/
+        cp README.md release/
+        cp SETUP_GUIDE.md release/
+        tar -czf display-management-system-${{ github.ref_name }}.tar.gz release/
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        echo "## 변경사항" > CHANGELOG.md
+        git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD~1)..HEAD >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "## 설치 방법" >> CHANGELOG.md
+        echo "1. 아카이브를 다운로드하고 압축을 해제합니다." >> CHANGELOG.md
+        echo "2. \`npm install\`을 실행하여 의존성을 설치합니다." >> CHANGELOG.md
+        echo "3. 환경 변수를 설정합니다 (\`.env.example\` 참고)." >> CHANGELOG.md
+        echo "4. \`npm start\`로 애플리케이션을 시작합니다." >> CHANGELOG.md
+
+    - name: Create GitHub Release
+      uses: ncipollo/release-action@v1
+      with:
+        name: Release ${{ github.ref_name }}
+        bodyFile: CHANGELOG.md
+        artifacts: "display-management-system-${{ github.ref_name }}.tar.gz"
+        draft: false
+        prerelease: false
+        token: ${{ secrets.GITHUB_TOKEN }} 

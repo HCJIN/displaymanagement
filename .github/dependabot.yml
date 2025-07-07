@@ -1,0 +1,61 @@
+version: 2
+updates:
+  # Root package.json
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "your-team-name"
+    assignees:
+      - "your-team-name"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+
+  # Backend dependencies
+  - package-ecosystem: "npm"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "your-team-name"
+    assignees:
+      - "your-team-name"
+    commit-message:
+      prefix: "deps(backend)"
+      include: "scope"
+
+  # Frontend dependencies
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "your-team-name"
+    assignees:
+      - "your-team-name"
+    commit-message:
+      prefix: "deps(frontend)"
+      include: "scope"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 2
+    reviewers:
+      - "your-team-name"
+    assignees:
+      - "your-team-name"
+    commit-message:
+      prefix: "ci"
+      include: "scope" 
