@@ -52,11 +52,11 @@ mqttBroker.authenticate = (client, username, password, callback) => {
   callback(null, true);
 };
 
-// MQTT 서버 시작
-mqttServer.listen(1883, () => {
-  console.log('🚀 MQTT 브로커가 시작되었습니다.');
-  console.log('   포트: 1883');
-});
+// MQTT 서버 시작 (주석처리: 외부 EMQX Cloud 사용)
+// mqttServer.listen(1883, () => {
+//   console.log('🚀 MQTT 브로커가 시작되었습니다.');
+//   console.log('   포트: 1883');
+// });
 
 // 서버 및 Socket.IO 생성
 const server = http.createServer(app);

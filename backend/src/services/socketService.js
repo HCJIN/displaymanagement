@@ -134,16 +134,22 @@ class SocketService {
         deviceId: clientInfo.deviceId
       });
 
-      // ✅ 명령어별 처리
+      // ✅ 명령어별 처리 (신프로토콜 정의서 2023.3 준수)
       switch (packet.command) {
-        case 0x10: // ID 전송 (최초 접속)
+        case 0x00000010: // ID 전송 (최초 접속) - 신프로토콜 4 bytes
+        case 0x10: // ID 전송 (구프로토콜 1 byte) - 하위 호환성
           this.handleDeviceIdResponse(socket, packet);
           break;
-        case 0x03: // 시간 동기화 응답
+        case 0x00000003: // 시간 동기화 응답 - 신프로토콜 4 bytes
+        case 0x03: // 시간 동기화 응답 (구프로토콜 1 byte) - 하위 호환성
           this.handleTimeSync(socket, packet);
           break;
-        case 0x08: // 수신정보 이상 회신
+        case 0x00000008: // 수신정보 이상 회신 - 신프로토콜 4 bytes
+        case 0x08: // 수신정보 이상 회신 (구프로토콜 1 byte) - 하위 호환성
           this.handleErrorResponse(socket, packet);
+          break;
+        case 0x00000011: // 멀티메시지 방정보 전송 응답 - 신프로토콜 4 bytes
+          this.handleMultiMessageResponse(socket, packet);
           break;
         default:
           logger.debug(`처리되지 않은 명령어: 0x${packet.command.toString(16)}`);
@@ -378,21 +384,21 @@ class SocketService {
     }
   }
 
-  // 🔧 ID 요청 패킷 생성
+  // 🔧 ID 요청 패킷 생성 (신프로토콜 정의서 2023.3 준수)
   createIdRequestPacket() {
-    // 신프로토콜 ID 요청 패킷 (0x10)
-    const buffer = Buffer.alloc(18);
+    // 신프로토콜 ID 요청 패킷 (0x00000010)
+    const buffer = Buffer.alloc(21);
     let offset = 0;
 
     // STX
     buffer.writeUInt8(0x02, offset++);
 
-    // LENGTH
-    buffer.writeUInt16BE(15, offset); // COMMAND(4) + CHECKSUM(1) + ID(12) - 2(LENGTH)
+    // LENGTH (COMMAND(4) + CHECKSUM(1) + ID(12))
+    buffer.writeUInt16BE(17, offset);
     offset += 2;
 
-    // COMMAND
-    buffer.writeUInt32BE(0x10, offset);
+    // COMMAND (4 bytes, Little Endian) - 정의서 준수!
+    buffer.writeUInt32LE(0x00000010, offset);
     offset += 4;
 
     // CHECKSUM (단순 계산)
@@ -518,15 +524,15 @@ class SocketService {
     }
   }
 
-  // 🔧 전체 삭제 패킷 생성
+  // 🔧 전체 삭제 패킷 생성 (신프로토콜 정의서 2023.3 준수)
   createClearMessagesPacket() {
-    const buffer = Buffer.alloc(7);
+    const buffer = Buffer.alloc(10);
     let offset = 0;
 
     buffer.writeUInt8(0x02, offset++);     // STX
-    buffer.writeUInt16BE(4, offset);       // LENGTH
+    buffer.writeUInt16BE(5, offset);       // LENGTH (COMMAND(4) + CHECKSUM(1))
     offset += 2;
-    buffer.writeUInt32BE(0x15, offset);    // COMMAND (전체 삭제)
+    buffer.writeUInt32LE(0x00000015, offset); // COMMAND (전체 삭제) - 4 bytes Little Endian
     offset += 4;
     buffer.writeUInt8(0x15, offset++);     // CHECKSUM
     buffer.writeUInt8(0x03, offset);       // ETX
@@ -534,18 +540,18 @@ class SocketService {
     return buffer;
   }
 
-  // 🔧 전원 제어 패킷 생성
+  // 🔧 전원 제어 패킷 생성 (신프로토콜 정의서 2023.3 준수)
   createPowerControlPacket(data) {
-    const buffer = Buffer.alloc(15);
+    const buffer = Buffer.alloc(18);
     let offset = 0;
 
     buffer.writeUInt8(0x02, offset++);     // STX
-    buffer.writeUInt16BE(12, offset);      // LENGTH
+    buffer.writeUInt16BE(13, offset);      // LENGTH (COMMAND(4) + DATA(8) + CHECKSUM(1))
     offset += 2;
-    buffer.writeUInt32BE(0x0E, offset);    // COMMAND (환경감시기 동작 제어)
+    buffer.writeUInt32LE(0x0000000E, offset); // COMMAND (환경감시기 동작 제어) - 4 bytes Little Endian
     offset += 4;
 
-    // 전원 제어 데이터 (8 bytes)
+    // 전원 제어 데이터 (8 bytes) - 정의서 준수
     const powerValue = data.action === 'ON' ? 1 : 0;
     buffer.writeUInt8(powerValue, offset++); // Power 제어
     buffer.writeUInt8(0, offset++);          // Fan1 제어
@@ -641,6 +647,29 @@ class SocketService {
         errorAt: new Date().toISOString()
       });
     }
+  }
+
+  // 🔧 멀티메시지 응답 처리 (신프로토콜 정의서 2023.3 준수)
+  handleMultiMessageResponse(socket, packet) {
+    const clientInfo = this.deviceSockets.get(socket);
+    if (!clientInfo) return;
+
+    logger.info('📥 멀티메시지 방정보 전송 응답 수신:', {
+      deviceId: clientInfo.deviceId,
+      command: '0x' + packet.command.toString(16).padStart(8, '0'),
+      commandName: '멀티메시지 방정보 전송',
+      protocolStandard: '신프로토콜 정의서 2023.3 준수'
+    });
+
+    // ✅ 웹 클라이언트에 멀티메시지 응답 이벤트 발생
+    this.emitToWeb('multiMessageResponse', {
+      deviceId: clientInfo.deviceId,
+      command: '0x' + packet.command.toString(16).padStart(8, '0'),
+      receivedAt: new Date().toISOString()
+    });
+
+    // 추후 필요에 따라 응답 처리 로직 구현
+    // 예: 전송 성공 확인, 후속 명령어 전송 등
   }
 
   // 🔧 Device ID 유효성 검사

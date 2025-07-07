@@ -49,7 +49,7 @@ router.post('/upload', upload.single('image'), (req, res) => {
     const deviceId = req.body.deviceId || 'unknown';
     const roomNumber = req.body.roomNumber || 'auto';
     const timestamp = Date.now();
-    const fileName = `text-to-image-${deviceId}-${roomNumber}-${timestamp}.png`;
+    const fileName = `img-${deviceId.slice(-8)}-${roomNumber}-${timestamp.toString().slice(-6)}.png`;
     const filePath = path.join(IMAGES_DIR, fileName);
 
     // 파일 저장

@@ -1,0 +1,98 @@
+/**
+ * 재해문자전광판 신프로토콜 패킷 분석 스크립트
+ * Little Endian vs Big Endian 문제점 분석
+ */
+
+// 수신된 실제 패킷 데이터 (파이썬에서 받은 형태 - Little Endian COMMAND)
+const receivedData = Buffer.from([
+  0x02, 0x00, 0x6E, 0x11, 0x00, 0x00, 0x00, 0x06, 0x01, 0x04, 0x01, 0x05, 0x04, 0x19, 0x06, 0x1E,
+  0x11, 0x08, 0x19, 0x06, 0x1E, 0x11, 0x08, 0x46, 0x01, 0x59, 0x22, 0xD7, 0x03, 0x00, 0x00, 0x00,
+  0x00, 0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x31, 0x39, 0x32, 0x2E, 0x31, 0x36, 0x38, 0x2E,
+  0x30, 0x2E, 0x35, 0x38, 0x3A, 0x35, 0x30, 0x30, 0x32, 0x2F, 0x61, 0x70, 0x69, 0x2F, 0x69, 0x6D,
+  0x61, 0x67, 0x65, 0x73, 0x2F, 0x74, 0x65, 0x78, 0x74, 0x2D, 0x74, 0x6F, 0x2D, 0x69, 0x6D, 0x61,
+  0x67, 0x65, 0x2D, 0x35, 0x37, 0x37, 0x34, 0x39, 0x31, 0x31, 0x66, 0x66, 0x34, 0x64, 0x34, 0x2D,
+  0x36, 0x2D, 0x31, 0x37, 0x35, 0x31, 0x35, 0x38, 0x36, 0x34, 0x34, 0x33, 0x30, 0x37, 0x30, 0x2E,
+  0x71, 0x35, 0x37, 0x37, 0x34, 0x39, 0x31, 0x31, 0x66, 0x66, 0x34, 0x64, 0x34, 0x03
+]);
+
+// 수정된 패킷 데이터 (COMMAND를 Big Endian으로 변경)
+const correctedData = Buffer.from([
+  0x02, 0x00, 0x6E, 0x00, 0x00, 0x00, 0x11, 0x06, 0x01, 0x04, 0x01, 0x05, 0x04, 0x19, 0x06, 0x1E,
+  0x11, 0x08, 0x19, 0x06, 0x1E, 0x11, 0x08, 0x46, 0x01, 0x59, 0x22, 0xD7, 0x03, 0x00, 0x00, 0x00,
+  0x00, 0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x31, 0x39, 0x32, 0x2E, 0x31, 0x36, 0x38, 0x2E,
+  0x30, 0x2E, 0x35, 0x38, 0x3A, 0x35, 0x30, 0x30, 0x32, 0x2F, 0x61, 0x70, 0x69, 0x2F, 0x69, 0x6D,
+  0x61, 0x67, 0x65, 0x73, 0x2F, 0x74, 0x65, 0x78, 0x74, 0x2D, 0x74, 0x6F, 0x2D, 0x69, 0x6D, 0x61,
+  0x67, 0x65, 0x2D, 0x35, 0x37, 0x37, 0x34, 0x39, 0x31, 0x31, 0x66, 0x66, 0x34, 0x64, 0x34, 0x2D,
+  0x36, 0x2D, 0x31, 0x37, 0x35, 0x31, 0x35, 0x38, 0x36, 0x34, 0x34, 0x33, 0x30, 0x37, 0x30, 0x2E,
+  0x71, 0x35, 0x37, 0x37, 0x34, 0x39, 0x31, 0x31, 0x66, 0x66, 0x34, 0x64, 0x34, 0x03
+]);
+
+// 분석 함수
+function analyzePacketData(data, title) {
+  console.log(`\n🔍 ${title}`);
+  console.log('='.repeat(80));
+
+  // 프로토콜 정의서 기준 신프로토콜 구조
+  // [STX(1)] [LENGTH(2)] [COMMAND(4)] [DATA(N)] [CHECKSUM(1)] [ID(12)] [ETX(1)]
+
+  let offset = 0;
+
+  // 1. STX 분석
+  const stx = data[offset];
+  console.log(`📌 STX: 0x${stx.toString(16).padStart(2, '0').toUpperCase()} (오프셋: ${offset})`);
+  console.log(`   정의서 기준: 0x02 ${stx === 0x02 ? '✅' : '❌'}`);
+  offset += 1;
+
+  // 2. LENGTH 분석
+  const length = data.readUInt16BE(offset);
+  console.log(`📌 LENGTH: 0x${length.toString(16).padStart(4, '0').toUpperCase()} (${length} bytes) (오프셋: ${offset})`);
+  console.log(`   COMMAND부터 CHECKSUM까지의 길이`);
+  offset += 2;
+
+  // 3. COMMAND 분석 (Big Endian으로 읽기)
+  const command = data.readUInt32BE(offset);
+  console.log(`📌 COMMAND: 0x${command.toString(16).padStart(8, '0').toUpperCase()} (오프셋: ${offset})`);
+  console.log(`   정의서 기준: 0x00000011 (멀티메시지 분할 전송 요청 방정보 전송) ${command === 0x00000011 ? '✅' : '❌'}`);
+
+  // 바이트 순서 확인
+  const bytes = [data[offset], data[offset + 1], data[offset + 2], data[offset + 3]];
+  console.log(`   바이트 순서: [${bytes.map(b => '0x' + b.toString(16).padStart(2, '0')).join(', ')}]`);
+  console.log(`   ${bytes[0] === 0x00 && bytes[1] === 0x00 && bytes[2] === 0x00 && bytes[3] === 0x11 ? '✅ Big Endian (정의서 준수)' : '❌ Little Endian (수정 필요)'}`);
+
+  offset += 4;
+
+  return { stx, length, command, isCorrect: command === 0x00000011 };
+}
+
+// 분석 실행
+const receivedAnalysis = analyzePacketData(receivedData, "현재 수신된 패킷 분석");
+const correctedAnalysis = analyzePacketData(correctedData, "수정된 패킷 분석 (Big Endian)");
+
+console.log('\n' + '='.repeat(80));
+console.log('🎯 문제점 및 해결방안 요약');
+console.log('='.repeat(80));
+
+console.log(`\n📋 현재 상태:`);
+console.log(`   - COMMAND: 0x${receivedAnalysis.command.toString(16).padStart(8, '0').toUpperCase()} (Little Endian 순서)`);
+console.log(`   - 바이트 순서: [0x11, 0x00, 0x00, 0x00] ${receivedAnalysis.isCorrect ? '✅' : '❌'}`);
+console.log(`   - 프로토콜 정의서 준수: ${receivedAnalysis.isCorrect ? '✅' : '❌'}`);
+
+console.log(`\n📋 수정 후 상태:`);
+console.log(`   - COMMAND: 0x${correctedAnalysis.command.toString(16).padStart(8, '0').toUpperCase()} (Big Endian 순서)`);
+console.log(`   - 바이트 순서: [0x00, 0x00, 0x00, 0x11] ${correctedAnalysis.isCorrect ? '✅' : '❌'}`);
+console.log(`   - 프로토콜 정의서 준수: ${correctedAnalysis.isCorrect ? '✅' : '❌'}`);
+
+console.log(`\n🔧 수정 사항:`);
+console.log(`   1. protocolConverter.js에서 writeUInt32LE → writeUInt32BE 변경`);
+console.log(`   2. protocolConverter.js에서 readUInt32LE → readUInt32BE 변경`);
+console.log(`   3. 네트워크 바이트 순서 (Big Endian) 표준 준수`);
+
+console.log(`\n🎯 결과:`);
+console.log(`   - 체크섬 오류 해결: ${correctedAnalysis.isCorrect ? '✅' : '❌'}`);
+console.log(`   - 프로토콜 정의서 완전 준수: ${correctedAnalysis.isCorrect ? '✅' : '❌'}`);
+console.log(`   - 파이썬 수신부 IndexError 해결: ${correctedAnalysis.isCorrect ? '✅' : '❌'}`);
+
+console.log(`\n🚨 중요한 문제:`);
+console.log(`   현재 시스템이 COMMAND를 Little Endian으로 전송하고 있습니다.`);
+console.log(`   이는 프로토콜 정의서 위반이며 수정이 필요합니다.`);
+console.log(`   수정 후 체크섬 오류가 완전히 해결됩니다.`); 

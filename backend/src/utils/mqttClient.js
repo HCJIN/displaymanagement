@@ -3,11 +3,11 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-// MQTT 브로커 설정
-const MQTT_BROKER_HOST = process.env.MQTT_BROKER_HOST || 'your-mqtt-broker-host.com';
+// MQTT 브로커 설정 (EMQX 클라우드)
+const MQTT_BROKER_HOST = process.env.MQTT_BROKER_HOST || 'o6e6b9b6.ala.asia-southeast1.emqxsl.com';
 const MQTT_BROKER_PORT = parseInt(process.env.MQTT_BROKER_PORT || '8883');
-const MQTT_USERNAME = process.env.ADMIN_MQTT_USERNAME || 'your_mqtt_username';
-const MQTT_PASSWORD = process.env.ADMIN_MQTT_PASSWORD || 'your_mqtt_password';
+const MQTT_USERNAME = process.env.ADMIN_MQTT_USERNAME || 'admin_mvp_user';
+const MQTT_PASSWORD = process.env.ADMIN_MQTT_PASSWORD || 'noa12345';
 
 // 클라이언트 ID를 고유하게 생성 (중복 연결 방지)
 const MQTT_CLIENT_ID = process.env.ADMIN_MQTT_CLIENT_ID
@@ -377,7 +377,7 @@ function publishToMqtt(topic, payload, options = {}) {
 
       const publishOptions = {
         qos: options.qos || MQTT_QOS,
-        retain: options.retain !== undefined ? options.retain : MQTT_RETAIN
+        retain: true  // 강제로 true 설정 (EMQX 콘솔에서 확인하기 위해)
       };
 
       const fullTopic = topic.startsWith(MQTT_TOPIC_PREFIX)

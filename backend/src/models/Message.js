@@ -70,26 +70,30 @@ const EndEffect = {
   EXPAND_REVERSE: 0x0B    // 좌우역상으로 확대되면서 사라짐
 };
 
-// 🆕 프로토콜 명령어 열거형
+// 🆕 프로토콜 명령어 열거형 (신프로토콜 정의서 2023.3 완전 준수)
 const ProtocolCommand = {
-  CONNECT: 0x10,          // ID 접속
-  SEND_TEXT: 0x01,        // 문구전송 (3컬러전용)
-  REQUEST_ROOM_INFO: 0x02, // 방정보요구 (3컬러전용)
-  TIME_SYNC: 0x03,        // 시간전송
-  DELETE_ALL: 0x04,       // 전체삭제
-  DELETE_ROOM: 0x07,      // 방정보삭제
-  ERROR_RESPONSE: 0x08,   // 수신정보이상회신
-  BRIGHTNESS_CONTROL: 0x0C, // 휘도조절
-  CHECK_EXTERNAL_MSG: 0x0D, // 서버외변경메시지확인
-  ENVIRONMENT_CONTROL: 0x0E, // 환경감시기동작제어
-  ENVIRONMENT_STATUS: 0x0E,  // 환경감시기상태요구
-  MULTIMEDIA_ROOM_INFO: 0x10, // 멀티메시지방정보전송
-  MULTIMEDIA_SPLIT_REQUEST: 0x11, // 멀티메시지분할전송요청
-  MULTIMEDIA_SPLIT_RESPONSE: 0x12, // 멀티메시지분할전송요청응답
-  MULTIMEDIA_SPLIT_COMPLETE: 0x13, // 멀티메시지분할전송완료
-  MULTIMEDIA_DELETE_ROOM: 0x14,   // 방정보삭제
-  MULTIMEDIA_DELETE_ALL: 0x15,    // 전체삭제
-  NIGHT_TIME_SETTING: 0xD1        // 야간시간및동작시간설정
+  // 신프로토콜 COMMAND (4 bytes)
+  ID: 0x00000010,                   // ID 전송
+  TIME_SYNC: 0x00000003,            // 시간 동기화
+  ERROR_RESPONSE: 0x00000008,       // 수신정보 이상 회신
+  BRIGHTNESS_CONTROL: 0x0000000C,   // 휘도 조절
+  EXTERNAL_MSG_CHECK: 0x0000000D,   // 서버외변경 메시지 확인
+  ENV_CONTROL: 0x0000000E,          // 환경감시기 동작 제어
+  ENV_STATUS: 0x0000000E,           // 환경감시기 상태 요구
+  MULTI_MESSAGE_ROOM: 0x00000010,   // 멀티메시지 방정보 전송 (표: 0x10)
+  MULTI_MESSAGE_INFO: 0x00000011,   // 멀티메시지 방정보 전송 (실제: 0x11) ⭐ 메인
+  MULTI_MESSAGE_SPLIT_REQ: 0x00000011,  // 멀티메시지 분할 전송 요청
+  MULTI_MESSAGE_SPLIT_RES: 0x00000012,  // 멀티메시지 분할 전송 응답
+  MULTI_MESSAGE_COMPLETE: 0x00000013,   // 멀티메시지 분할 전송 완료
+  DELETE_ROOM: 0x00000014,          // 방정보 삭제
+  DELETE_ALL: 0x00000015,           // 전체 삭제
+  NIGHT_TIME_SETTING: 0x000000D1,   // 야간 시간 및 동작 시간 설정
+
+  // 구프로토콜 COMMAND (1 byte) - 하위 호환성
+  OLD_SEND_TEXT: 0x01,              // 문구전송 (구프로토콜)
+  OLD_REQUEST_ROOM_INFO: 0x02,      // 방정보요구 (구프로토콜)
+  OLD_DELETE_ALL: 0x04,             // 전체삭제 (구프로토콜)
+  OLD_DELETE_ROOM: 0x07             // 방정보삭제 (구프로토콜)
 };
 
 class Message {

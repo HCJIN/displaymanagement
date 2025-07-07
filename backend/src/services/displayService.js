@@ -744,7 +744,7 @@ class DisplayService extends EventEmitter {
       if (messageData.conversionInfo && !imageUrl) {
         // 🔧 동일한 타임스탬프 사용
         const timestamp = Date.now();
-        const fileName = `text-to-image-${deviceId}-${message.roomNumber}-${timestamp}.png`;
+        const fileName = `img-${deviceId.slice(-8)}-${message.roomNumber}-${timestamp.toString().slice(-6)}.png`;
         imageUrl = `${this.webServerConfig.protocol}://${this.webServerConfig.host}:${this.webServerConfig.port}${this.webServerConfig.imagePath}/${fileName}`;
 
         // 실제 이미지 파일 저장 (base64 데이터가 있는 경우)
@@ -978,7 +978,7 @@ class DisplayService extends EventEmitter {
                 ? '\\x' + c.charCodeAt(0).toString(16).padStart(2, '0')
                 : c
             ).join('');
-            console.log(`🐍 파이썬 수신 형태: ${pythonBinaryFormat.substring(0, 100)}${pythonBinaryFormat.length > 50 ? '...' : ''}`);
+            console.log(`🐍 파이썬 수신 형태 (완전): ${pythonBinaryFormat}`);
           } else {
             // 🔧 16진수 문자열을 그대로 문자열로 전송 (기본값)
             await publishToMqtt(topic, payload, { qos: 1, retain: true });
