@@ -22,10 +22,6 @@ import {
   Tabs,
   Tab,
   Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
   IconButton,
   Dialog,
   DialogTitle,
@@ -43,8 +39,6 @@ import {
   Image,
   FormatColorText,
   Schedule,
-  Settings,
-  Delete,
   ExpandMore,
   Preview,
   DevicesOther,
@@ -133,7 +127,6 @@ const MessageSend = () => {
     content: '',
     imageData: null,
     webServerUrl: '', // 웹서버 URL 추가
-    components: [],
     priority: 'NORMAL',
     urgent: false,
 
@@ -443,10 +436,6 @@ const MessageSend = () => {
             payload.imageData = formData.imageData;
           }
           break;
-        case 'mixed':
-          endpoint = 'sendMixed';
-          payload.components = formData.components;
-          break;
         default:
           throw new Error('지원하지 않는 메시지 타입입니다.');
       }
@@ -502,7 +491,6 @@ const MessageSend = () => {
             content: '',                // 텍스트 내용 초기화
             imageData: null,           // 이미지 데이터 초기화
             webServerUrl: '',          // 웹서버 URL 초기화
-            components: [],            // 복합 컴포넌트 초기화
             // 🔧 방번호와 자동할당은 유지하여 연속 전송 시 편의성 제공
             roomNumber: prev.roomNumber, // 방번호 유지
             autoAssignRoom: prev.autoAssignRoom, // 자동할당 설정 유지
@@ -655,33 +643,7 @@ const MessageSend = () => {
     reader.readAsDataURL(file);
   };
 
-  // 복합 메시지 컴포넌트 추가
-  const addComponent = (type) => {
-    const newComponent = {
-      id: Date.now(),
-      type,
-      content: type === 'text' ? '' : null,
-      data: type === 'image' ? null : undefined,
-      options: {
-        fontSize: 16,
-        color: '#FFFFFF',
-        position: 'center',
-      },
-    };
 
-    setFormData(prev => ({
-      ...prev,
-      components: [...prev.components, newComponent],
-    }));
-  };
-
-  // 복합 메시지 컴포넌트 삭제
-  const removeComponent = (componentId) => {
-    setFormData(prev => ({
-      ...prev,
-      components: prev.components.filter(c => c.id !== componentId),
-    }));
-  };
 
   // 선택된 디바이스 정보
   const selectedDevice = devices.find(d => d.id === formData.deviceId);
@@ -1210,11 +1172,6 @@ const MessageSend = () => {
                   icon={<Image />}
                   onClick={() => updateFormData('messageType', 'image')}
                 />
-                <Tab
-                  label="복합"
-                  icon={<Settings />}
-                  onClick={() => updateFormData('messageType', 'mixed')}
-                />
               </Tabs>
 
               {/* 텍스트 메시지 */}
@@ -1315,53 +1272,7 @@ const MessageSend = () => {
                 </Box>
               </TabPanel>
 
-              {/* 복합 메시지 */}
-              <TabPanel value={activeTab} index={2}>
-                <Box display="flex" gap={1} mb={2}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<FormatColorText />}
-                    onClick={() => addComponent('text')}
-                    disabled={!hasMessagePermission}
-                  >
-                    텍스트 추가
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<Image />}
-                    onClick={() => addComponent('image')}
-                    disabled={!hasMessagePermission}
-                  >
-                    이미지 추가
-                  </Button>
-                </Box>
 
-                <List>
-                  {formData.components.map((component, index) => (
-                    <ListItem key={component.id} divider>
-                      <ListItemText
-                        primary={`${component.type === 'text' ? '텍스트' : '이미지'} 컴포넌트 ${index + 1}`}
-                        secondary={component.type === 'text' ? component.content : '이미지 파일'}
-                      />
-                      <ListItemSecondaryAction>
-                        <IconButton
-                          edge="end"
-                          onClick={() => removeComponent(component.id)}
-                          disabled={!hasMessagePermission}
-                        >
-                          <Delete />
-                        </IconButton>
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                  ))}
-                </List>
-
-                {formData.components.length === 0 && (
-                  <Typography color="textSecondary" textAlign="center" py={4}>
-                    컴포넌트를 추가해주세요.
-                  </Typography>
-                )}
-              </TabPanel>
             </CardContent>
           </Card>
         </Grid>

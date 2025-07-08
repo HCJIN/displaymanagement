@@ -95,10 +95,15 @@ class User {
       notifications: true,
       autoLogout: 30 // 분
     };
+
+
   }
 
   // 패스워드 검증
   async comparePassword(candidatePassword) {
+    if (!this.password || !candidatePassword) {
+      return false;
+    }
     return bcrypt.compare(candidatePassword, this.password);
   }
 
@@ -150,9 +155,9 @@ class User {
   save() {
     const index = users.findIndex(user => user.id === this.id);
     if (index !== -1) {
-      users[index] = this.toObject();
+      users[index] = this.toObject(true); // 패스워드 포함하여 저장
     } else {
-      users.push(this.toObject());
+      users.push(this.toObject(true)); // 패스워드 포함하여 저장
     }
     return this;
   }
@@ -309,6 +314,83 @@ class User {
       'system_control',    // 시스템 제어
       'view_only'          // 조회만 가능
     ];
+  }
+
+  // 🔧 사용자 데이터 초기화 (패스워드 복구용)
+  static initializeUsers() {
+    console.log('🔧 사용자 데이터 초기화 시작...');
+
+    // 기존 users 배열 확인
+    const adminUser = users.find(u => u.username === 'admin');
+    if (!adminUser || !adminUser.password) {
+      console.log('⚠️ admin 사용자 패스워드 누락, 재초기화 중...');
+
+      // users 배열 완전 재초기화
+      users.length = 0; // 배열 클리어
+      users.push(
+        {
+          id: 1,
+          username: 'admin',
+          email: 'admin@display.com',
+          password: bcrypt.hashSync('admin123!', 10),
+          role: 'admin',
+          permissions: ['device_control', 'message_send', 'config_change', 'user_manage', 'view_logs'],
+          active: true,
+          createdAt: new Date('2025-01-01'),
+          updatedAt: new Date('2025-01-01'),
+          lastLogin: null,
+          loginCount: 0,
+          profile: {
+            firstName: '관리자',
+            lastName: '시스템',
+            department: 'IT',
+            phone: '010-0000-0000'
+          }
+        },
+        {
+          id: 2,
+          username: 'operator1',
+          email: 'operator1@display.com',
+          password: bcrypt.hashSync('operator123!', 10),
+          role: 'operator',
+          permissions: ['message_send', 'device_control'],
+          active: true,
+          createdAt: new Date('2025-01-02'),
+          updatedAt: new Date('2025-01-02'),
+          lastLogin: null,
+          loginCount: 0,
+          profile: {
+            firstName: '운영자',
+            lastName: '1',
+            department: '운영팀',
+            phone: '010-1111-1111'
+          }
+        },
+        {
+          id: 3,
+          username: 'viewer1',
+          email: 'viewer1@display.com',
+          password: bcrypt.hashSync('viewer123!', 10),
+          role: 'viewer',
+          permissions: ['view_only'],
+          active: true,
+          createdAt: new Date('2025-01-03'),
+          updatedAt: new Date('2025-01-03'),
+          lastLogin: null,
+          loginCount: 0,
+          profile: {
+            firstName: '관람자',
+            lastName: '1',
+            department: '모니터링팀',
+            phone: '010-2222-2222'
+          }
+        }
+      );
+
+      console.log('✅ 사용자 데이터 재초기화 완료');
+    } else {
+      console.log('✅ admin 사용자 패스워드 정상');
+    }
   }
 }
 

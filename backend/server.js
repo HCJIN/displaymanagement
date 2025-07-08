@@ -10,6 +10,7 @@ const net = require('net');
 const app = require('./src/app');
 const socketService = require('./src/services/socketService'); // ✅ ID 기반 소켓 서비스 추가
 const Device = require('./src/models/Device'); // ✅ Device 모델 추가
+const User = require('./src/models/User'); // ✅ User 모델 추가
 
 // 포트 설정 - 5002로 변경
 const PORT = process.env.PORT || 5002;
@@ -170,13 +171,17 @@ socketService.setEventEmitter(broadcastDeviceEvent);
 // ✅ 서버 시작 함수
 async function startServer() {
   try {
-    // Socket.IO 서버 시작 (기존)
-    server.listen(PORT, () => {
+    // 🔧 사용자 데이터 초기화 (패스워드 복구)
+    User.initializeUsers();
+
+    // Socket.IO 서버 시작 (모든 네트워크 인터페이스에서 접근 가능)
+    server.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 서버가 포트 ${PORT}에서 실행 중입니다.`);
       console.log(`📋 API 문서: http://localhost:${PORT}/api/docs`);
       console.log(`❤️ 헬스 체크: http://localhost:${PORT}/health`);
       console.log(`🌍 환경: ${process.env.NODE_ENV || 'development'}`);
       console.log(`📡 Socket.IO 서버 활성화됨 (웹 클라이언트용)`);
+      console.log(`🌐 외부 접근: http://192.168.0.58:${PORT}`);
     });
 
     // ✅ ID 기반 전광판 소켓 서비스 시작

@@ -41,8 +41,9 @@ class SocketService {
         this.handleNewConnection(socket);
       });
 
-      this.server.listen(this.port, () => {
+      this.server.listen(this.port, '0.0.0.0', () => {
         logger.info(`🔌 ID 기반 소켓 서버 시작: 포트 ${this.port}`);
+        logger.info(`🌐 전광판 외부 접근: tcp://192.168.0.58:${this.port}`);
         this.isRunning = true;
       });
 

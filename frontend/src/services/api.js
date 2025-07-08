@@ -2,12 +2,12 @@
 import axios from 'axios';
 
 // API 기본 URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002';
+const BACKEND_IP = process.env.REACT_APP_BACKEND_HOST || '192.168.0.58';
+const BACKEND_PORT = process.env.REACT_APP_BACKEND_PORT || '5002';
+const API_BASE_URL = process.env.REACT_APP_API_URL || `http://${BACKEND_IP}:${BACKEND_PORT}`;
 
 // 🆕 실제 백엔드 메시지 전송 활성화
 const USE_REAL_BACKEND_FOR_MESSAGES = true; // 실제 백엔드 사용
-const BACKEND_IP = process.env.REACT_APP_BACKEND_HOST || '192.168.0.58';
-const BACKEND_PORT = process.env.REACT_APP_BACKEND_PORT || '5002';
 
 // 🔧 토큰 만료 시 자동 로그아웃 처리
 const handleTokenExpiration = (error) => {
