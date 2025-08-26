@@ -149,7 +149,7 @@ class ProtocolConverter {
     offset += 2;
 
     // 3. COMMAND (4 bytes) - 신프로토콜 특징! (Little Endian - 상대방 호환성)
-    result.command = buffer.readUInt32LE(offset);
+    result.command = buffer.readUInt32BE(offset);
     offset += 4;
 
     // 4. DATA 계산 (LENGTH - COMMAND(4) - CHECKSUM(1))
@@ -453,7 +453,7 @@ class ProtocolConverter {
 
     // COMMAND: 0x00000011 (4 bytes, Little Endian) - 상대방 호환성을 위해 Little Endian 사용
     const commandBuffer = Buffer.alloc(4);
-    commandBuffer.writeUInt32LE(this.COMMAND_MULTI_MESSAGE_INFO, 0); // 상대방이 Little Endian으로 읽음
+    commandBuffer.writeUInt32BE(this.COMMAND_MULTI_MESSAGE_INFO, 0);
     console.log('🔧 COMMAND 버퍼 생성:', {
       COMMAND_MULTI_MESSAGE_INFO: this.COMMAND_MULTI_MESSAGE_INFO,
       commandBuffer: commandBuffer.toString('hex').toUpperCase()
